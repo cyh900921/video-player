@@ -24,10 +24,13 @@
     }
     .controls {
       margin-top: 10px;
+      display: flex;
+      gap: 10px;
     }
     button {
       padding: 10px 20px;
       font-size: 18px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -36,18 +39,27 @@
     <source src="完整影片.mp4" type="video/mp4">
     您的瀏覽器不支援影片播放。
   </video>
+
   <div class="controls">
-    <button onclick="togglePlay()">▶️ / ⏸️ 暫停 / 播放</button>
+    <button onclick="togglePlay()">▶️ / ⏸️ 播放 / 暫停</button>
+    <button onclick="closePage()">❌ 關閉頁面</button>
   </div>
 
   <script>
     const video = document.getElementById("myVideo");
+
     function togglePlay() {
       if (video.paused) {
         video.play();
       } else {
         video.pause();
       }
+    }
+
+    function closePage() {
+      // 嘗試關閉頁面，如果失敗則跳回上一頁
+      window.close();
+      history.back();
     }
   </script>
 </body>
