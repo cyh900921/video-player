@@ -23,14 +23,23 @@
       background: black;
     }
     .controls {
-      margin-top: 10px;
+      margin-top: 20px;
       display: flex;
-      gap: 10px;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     button {
-      padding: 10px 20px;
-      font-size: 18px;
+      padding: 20px 40px;
+      font-size: 24px;
+      border: none;
+      border-radius: 10px;
+      background-color: #444;
+      color: white;
       cursor: pointer;
+    }
+    button:hover {
+      background-color: #666;
     }
   </style>
 </head>
@@ -57,7 +66,6 @@
     }
 
     function closePage() {
-      // 嘗試關閉頁面，如果失敗則跳回上一頁
       window.close();
       history.back();
     }
