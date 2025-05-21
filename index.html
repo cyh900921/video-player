@@ -1,39 +1,42 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>自訂影片播放器</title>
+  <title>影片播放頁面</title>
   <style>
-    video::-webkit-media-controls {
-      display: none !important;
+    body {
+      background-color: #000;
+      margin: 0;
+      text-align: center;
+      color: white;
     }
     video {
       width: 100%;
+      max-width: 800px;
+      height: auto;
+      outline: none;
     }
     .controls {
-      text-align: center;
       margin-top: 10px;
     }
     button {
+      font-size: 18px;
       padding: 10px 20px;
-      font-size: 16px;
     }
   </style>
 </head>
 <body>
   <h2>影片播放</h2>
-  <video id="myVideo" autoplay>
-    <source src="完整影片.mp4" type="video/mp4">
-    您的瀏覽器不支援播放影片。
-  </video>
-
+  <video id="myVideo" autoplay muted playsinline></video>
   <div class="controls">
-    <button onclick="togglePlay()">▶️ / ⏸️ 暫停或播放</button>
+    <button onclick="togglePlay()">▶️ / ⏸️ 暫停 / 播放</button>
   </div>
 
   <script>
-    const video = document.getElementById('myVideo');
+    const video = document.getElementById("myVideo");
+    video.src = "完整影片.mp4";
+    video.addEventListener("contextmenu", e => e.preventDefault()); // 禁止右鍵下載
+
     function togglePlay() {
       if (video.paused) {
         video.play();
