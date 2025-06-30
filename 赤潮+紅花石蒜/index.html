@@ -18,8 +18,6 @@
     video {
       max-width: 100vw;
       max-height: 90vh;
-      width: auto;
-      height: auto;
       background: black;
     }
     .controls {
@@ -44,16 +42,31 @@
   </style>
 </head>
 <body>
+  <!-- 1. 移除 muted、autoplay（建議手動播放），加上 controls -->
   <video id="myVideo" controls playsinline>
     <source src="赤潮+紅花石蒜.mp4" type="video/mp4">
     您的瀏覽器不支援影片播放。
   </video>
 
   <div class="controls">
+    <button onclick="togglePlay()">▶️ / ⏸️ 播放 / 暫停</button>
     <button onclick="closePage()">❌ 關閉頁面</button>
   </div>
 
   <script>
+    const video = document.getElementById("myVideo");
+
+    function togglePlay() {
+      if (video.paused) {
+        // 確保解除靜音並把音量開到最大
+        video.muted = false;
+        video.volume = 1.0;
+        video.play();
+      } else {
+        video.pause();
+      }
+    }
+
     function closePage() {
       window.close();
       history.back();
