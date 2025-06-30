@@ -44,27 +44,16 @@
   </style>
 </head>
 <body>
-  <video id="myVideo" autoplay muted playsinline>
+  <video id="myVideo" controls playsinline>
     <source src="赤潮+紅花石蒜.mp4" type="video/mp4">
     您的瀏覽器不支援影片播放。
   </video>
 
   <div class="controls">
-    <button onclick="togglePlay()">▶️ / ⏸️ 播放 / 暫停</button>
     <button onclick="closePage()">❌ 關閉頁面</button>
   </div>
 
   <script>
-    const video = document.getElementById("myVideo");
-
-    function togglePlay() {
-      if (video.paused) {
-        video.play();
-      } else {
-        video.pause();
-      }
-    }
-
     function closePage() {
       window.close();
       history.back();
