@@ -15,11 +15,32 @@
       align-items: center;
       justify-content: center;
     }
-    video {
+    /* 影片區塊 */
+    .video-container {
+      position: relative;
       max-width: 100vw;
       max-height: 90vh;
+      width: auto;
+      height: auto;
+    }
+    video {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
       background: black;
     }
+    /* 讀取中的 Spinner */
+    #spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 2em;
+      display: none;
+      pointer-events: none;
+    }
+    /* 自訂控制按鈕 */
     .controls {
       margin-top: 20px;
       display: flex;
@@ -42,35 +63,57 @@
   </style>
 </head>
 <body>
-  <!-- 1. 移除 muted、autoplay（建議手動播放），加上 controls -->
-  <video id="myVideo" controls playsinline>
-    <source src="赤潮+紅花石蒜.mp4" type="video/mp4">
-    您的瀏覽器不支援影片播放。
-  </video>
+
+  <div class="video-container">
+    <video id="myVideo" playsinline preload="auto">
+      <source src="赤潮+紅花石蒜.mp4" type="video/mp4">
+      您的瀏覽器不支援影片播放。
+    </video>
+    <div id="spinner">Loading…</div>
+  </div>
 
   <div class="controls">
-    <button onclick="togglePlay()">▶️ / ⏸️ 播放 / 暫停</button>
-    <button onclick="closePage()">❌ 關閉頁面</button>
+    <button id="playBtn">▶️ 播放</button>
+    <button id="pauseBtn">⏸️ 暫停</button>
+    <button id="closeBtn">❌ 關閉頁面</button>
   </div>
 
   <script>
-    const video = document.getElementById("myVideo");
+    const video   = document.getElementById("myVideo");
+    const spinner = document.getElementById("spinner");
+    const playBtn = document.getElementById("playBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const closeBtn = document.getElementById("closeBtn");
 
-    function togglePlay() {
-      if (video.paused) {
-        // 確保解除靜音並把音量開到最大
-        video.muted = false;
-        video.volume = 1.0;
-        video.play();
-      } else {
-        video.pause();
-      }
-    }
+    // 緩衝時顯示 Spinner
+    video.addEventListener("waiting", () => {
+      spinner.style.display = "block";
+    });
+    // 開始播放時隱藏 Spinner
+    video.addEventListener("playing", () => {
+      spinner.style.display = "none";
+    });
+    // 如果可以一路播放到底，也隱藏 Spinner
+    video.addEventListener("canplaythrough", () => {
+      spinner.style.display = "none";
+    });
 
-    function closePage() {
+    // 播放按鈕
+    playBtn.addEventListener("click", () => {
+      video.muted = false;
+      video.volume = 1.0;
+      video.play();
+    });
+    // 暫停按鈕
+    pauseBtn.addEventListener("click", () => {
+      video.pause();
+    });
+    // 關閉頁面按鈕
+    closeBtn.addEventListener("click", () => {
       window.close();
       history.back();
-    }
+    });
   </script>
+
 </body>
 </html>
