@@ -18,6 +18,8 @@
     video {
       max-width: 100vw;
       max-height: 90vh;
+      width: auto;
+      height: auto;
       background: black;
     }
     .controls {
@@ -42,8 +44,7 @@
   </style>
 </head>
 <body>
-  <!-- 1. 加上 loop 屬性 -->
-  <video id="myVideo" controls playsinline loop>
+  <video id="myVideo" autoplay muted playsinline>
     <source src="赤潮+紅花石蒜.mp4" type="video/mp4">
     您的瀏覽器不支援影片播放。
   </video>
@@ -56,13 +57,8 @@
   <script>
     const video = document.getElementById("myVideo");
 
-    // 確保 JS 階段也有設定 loop（其實加在標籤上就足夠）
-    video.loop = true;
-
     function togglePlay() {
       if (video.paused) {
-        video.muted = false;
-        video.volume = 1.0;
         video.play();
       } else {
         video.pause();
