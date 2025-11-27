@@ -30,19 +30,14 @@
 
 <body>
 
-<!-- ⭐ 不能 display:none! 不然無法出聲 -->
-<video id="v" playsinline
+<!-- ⭐ 1px 影片來源（支援聲音）-->
+<video id="v" playsinline muted
   style="position:absolute; left:-9999px; top:-9999px; width:1px; height:1px;"
 >
   <source src="完整影片.mp4" type="video/mp4">
 </video>
 
 <canvas id="c"></canvas>
-
-<div class="controls">
-  <button onclick="togglePlay()">▶️/⏸️ 播放/暫停</button>
-  <button onclick="restart()">🔁 重播 6 次</button>
-</div>
 
 <script>
 const video = document.getElementById("v");
@@ -53,11 +48,13 @@ let playing = false;
 let loopCount = 0;
 const MAX_LOOP = 6;
 
+// 初始載入影片資訊
 video.addEventListener("loadedmetadata", () => {
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 });
 
+// 播放畫面到 canvas
 function draw() {
   if (playing) {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -65,6 +62,7 @@ function draw() {
   }
 }
 
+// 影片循環次數計數
 video.addEventListener("ended", () => {
   loopCount++;
   if (loopCount < MAX_LOOP) {
@@ -75,24 +73,19 @@ video.addEventListener("ended", () => {
   }
 });
 
-function togglePlay() {
-  if (!playing) {
-    playing = true;
-    video.play();
-    draw();
-  } else {
-    playing = false;
-    video.pause();
-  }
-}
-
-function restart() {
-  loopCount = 0;
-  video.currentTime = 0;
+// ⭐⭐ 自動開始播放（靜音 autoplay），然後自動開聲音 ⭐⭐
+video.addEventListener("canplay", () => {
+  // 1. autoplay（需要 muted）
   playing = true;
   video.play();
   draw();
-}
+
+  // 2. 等影片開始播放 → 自動開聲音
+  setTimeout(() => {
+    video.muted = false;
+    video.volume = 1.0;
+  }, 200); // 等 0.2 秒確保 iOS 已經進入播放狀態
+});
 </script>
 
 </body>
