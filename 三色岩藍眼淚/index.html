@@ -31,10 +31,18 @@
     button:hover {
       background-color: #666;
     }
+
+    /* 停止後顯示的重放/停止按鈕區塊 */
+    #endControls {
+      display: none; /* 初始隱藏 */
+      margin-top: 30px;
+      display: flex;
+      gap: 20px;
+    }
   </style>
 </head>
 <body>
-  <!-- 移除 muted，加上 controls -->
+
   <video id="myVideo" controls playsinline>
     <source src="完整影片.mp4" type="video/mp4">
     您的瀏覽器不支援影片播放。
@@ -45,12 +53,22 @@
     <button onclick="closePage()">❌ 關閉頁面</button>
   </div>
 
+  <!-- 播放 6 次後出現的按鈕 -->
+  <div id="endControls">
+    <button onclick="restartVideo()">🔁 重新播放 6 次</button>
+    <button onclick="stopVideo()">⏹️ 停止播放</button>
+  </div>
+
   <script>
     const video = document.getElementById("myVideo");
+    const endControls = document.getElementById("endControls");
 
+    let playCount = 0;  // 記錄已播放次數
+    const MAX_PLAYS = 6;
+
+    // 播放 / 暫停按鈕
     function togglePlay() {
       if (video.paused) {
-        // 確保解除靜音，並把音量開到最大
         video.muted = false;
         video.volume = 1.0;
         video.play();
@@ -59,10 +77,45 @@
       }
     }
 
+    // 關閉網頁
     function closePage() {
       window.close();
       history.back();
     }
+
+    // 影片播放到結尾時檢查次數
+    video.addEventListener("ended", () => {
+      playCount++;
+
+      if (playCount < MAX_PLAYS) {
+        // 自動重播
+        video.currentTime = 0;
+        video.play();
+      } else {
+        // 播放第 6 次後停止
+        showEndControls();
+      }
+    });
+
+    // 顯示 🔁 & ⏹️ 按鈕
+    function showEndControls() {
+      endControls.style.display = "flex";
+    }
+
+    // 重新播放 6 次
+    function restartVideo() {
+      playCount = 0;
+      endControls.style.display = "none";
+      video.currentTime = 0;
+      video.play();
+    }
+
+    // 完全停止，不再播放
+    function stopVideo() {
+      video.pause();
+      video.currentTime = 0;
+    }
   </script>
+
 </body>
 </html>
