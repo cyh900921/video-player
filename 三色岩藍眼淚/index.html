@@ -34,7 +34,8 @@
 
 <body>
 
-<video id="v" playsinline muted
+<!-- ⭐ 不要 muted，聲音才會出來 -->
+<video id="v" playsinline
   style="position:absolute; left:-9999px; top:-9999px; width:1px; height:1px;"
 >
   <source src="完整影片.mp4" type="video/mp4">
@@ -63,7 +64,6 @@ video.addEventListener("loadedmetadata", () => {
   canvas.height = video.videoHeight;
 });
 
-// Canvas 畫面更新
 function draw() {
   if (playing) {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -71,7 +71,6 @@ function draw() {
   }
 }
 
-// 6 次循環
 video.addEventListener("ended", () => {
   loopCount++;
   if (loopCount < MAX_LOOP) {
@@ -84,19 +83,19 @@ video.addEventListener("ended", () => {
   }
 });
 
-// ⭐ 按一下 → 播放 6 次（不會變暫停）
 function startPlayback() {
   loopCount = 0;
   playing = true;
   video.currentTime = 0;
+
+  // ⭐ 用戶互動觸發播放 → iOS 允許有聲音播放
   video.play();
+
   draw();
 
-  // 播放時 disable 按鈕，不讓它變成暫停模式
   startBtn.disabled = true;
 }
 
-// ⭐ 停止播放（回到開始狀態）
 function stopVideo() {
   playing = false;
   video.pause();
