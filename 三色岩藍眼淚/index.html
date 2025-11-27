@@ -44,6 +44,7 @@
 
 <div class="controls">
   <button id="startBtn" onclick="startPlayback()">▶️ 開始播放</button>
+  <button onclick="exitPage()">❌ 離開</button>
 </div>
 
 <script>
@@ -54,32 +55,30 @@ const ctx = canvas.getContext("2d");
 let playing = false;
 let loopCount = 0;
 const MAX_LOOP = 6;
+
 const startBtn = document.getElementById("startBtn");
 
 // ============================
-// ⭐ 1) 影片載入後，播放 0.1 秒以取得第一幀
+// ⭐ 1) 載入後播放 0.1 秒抓第一幀
 // ============================
 video.addEventListener("loadedmetadata", () => {
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 
-  // 播 0.1 秒來解碼第一幀
   video.muted = true;
   video.currentTime = 0;
 
   video.play().then(() => {
     setTimeout(() => {
-      // 抓到第一幀
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      video.pause();     // 停住
-      video.currentTime = 0; // 回到開頭
-    }, 120); // iPhone需要 100~120ms 才會有第一幀
+      video.pause();
+      video.currentTime = 0;
+    }, 120);
   });
 });
 
 // ============================
-// ⭐ 真正的播放邏輯
+// ⭐ 播放循環
 // ============================
 function draw() {
   if (playing) {
@@ -101,7 +100,7 @@ video.addEventListener("ended", () => {
 });
 
 // ============================
-// ⭐ 使用者按開始後 → 才能開聲音 + 正式播放
+// ⭐ 開始播放（按鈕觸發 → 有聲音）
 // ============================
 function startPlayback() {
   loopCount = 0;
@@ -114,6 +113,19 @@ function startPlayback() {
   draw();
 
   startBtn.disabled = true;
+}
+
+// ============================
+// ⭐ 離開按鈕
+// ============================
+function exitPage() {
+  // 1. 試著關閉頁面（如果頁面是由 JS 打開的會成功）
+  window.close();
+
+  // 2. 如果關閉被阻擋 → 自動回上一頁（iPhone 會走這裡）
+  setTimeout(() => {
+    history.back();
+  }, 50);
 }
 </script>
 
