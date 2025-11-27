@@ -30,8 +30,10 @@
 
 <body>
 
-<!-- 隱藏影片來源，Safari 不會顯示 UI -->
-<video id="v" style="display:none" playsinline muted>
+<!-- ⭐ 不能 display:none! 不然無法出聲 -->
+<video id="v" playsinline
+  style="position:absolute; left:-9999px; top:-9999px; width:1px; height:1px;"
+>
   <source src="完整影片.mp4" type="video/mp4">
 </video>
 
@@ -56,7 +58,6 @@ video.addEventListener("loadedmetadata", () => {
   canvas.height = video.videoHeight;
 });
 
-// 播放循環（用 requestAnimationFrame）
 function draw() {
   if (playing) {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
