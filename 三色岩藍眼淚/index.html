@@ -34,7 +34,6 @@
 
 <body>
 
-<!-- ⭐ 不要 muted，聲音才會出來 -->
 <video id="v" playsinline
   style="position:absolute; left:-9999px; top:-9999px; width:1px; height:1px;"
 >
@@ -56,14 +55,23 @@ const ctx = canvas.getContext("2d");
 let playing = false;
 let loopCount = 0;
 const MAX_LOOP = 6;
-
 const startBtn = document.getElementById("startBtn");
 
 video.addEventListener("loadedmetadata", () => {
+  // 設定 canvas 尺寸
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
+
+  // ⭐ 載入後畫出第一幀，避免黑畫面
+  video.currentTime = 0;
+
+  // 等第一幀可畫後再 draw（iPhone 必須等 canplay）
+  video.addEventListener("canplay", () => {
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  }, { once: true });
 });
 
+// ⭐ 真正的播放循環
 function draw() {
   if (playing) {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -83,23 +91,26 @@ video.addEventListener("ended", () => {
   }
 });
 
+// ⭐ 開始播放（使用者按鍵 → iOS 允許有聲音）
 function startPlayback() {
   loopCount = 0;
   playing = true;
+
   video.currentTime = 0;
-
-  // ⭐ 用戶互動觸發播放 → iOS 允許有聲音播放
   video.play();
-
   draw();
 
   startBtn.disabled = true;
 }
 
+// ⭐ 停止播放
 function stopVideo() {
   playing = false;
   video.pause();
   video.currentTime = 0;
+
+  // 把第一幀畫回去，避免黑畫面
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   startBtn.textContent = "▶️ 開始播放";
   startBtn.disabled = false;
