@@ -16,9 +16,10 @@
       max-height: 90vh;
       background: black;
     }
-    .controls {
+    .controls, #endControls {
       margin-top: 20px;
-      display: flex; gap: 20px;
+      display: flex;
+      gap: 20px;
       flex-wrap: wrap; justify-content: center;
     }
     button {
@@ -28,22 +29,15 @@
       background-color: #444; color: #fff;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #666;
-    }
-
-    /* 停止後顯示的重放/停止按鈕區塊 */
-    #endControls {
-      display: none; /* 初始隱藏 */
-      margin-top: 30px;
-      display: flex;
-      gap: 20px;
-    }
+    button:hover { background-color: #666; }
+    #endControls { display: none; }
   </style>
 </head>
+
 <body>
 
-  <video id="myVideo" controls playsinline>
+  <!-- ⭐ 移除 controls！！！讓 Safari 不會跳出原生按鈕 -->
+  <video id="myVideo" playsinline webkit-playsinline>
     <source src="完整影片.mp4" type="video/mp4">
     您的瀏覽器不支援影片播放。
   </video>
@@ -53,69 +47,57 @@
     <button onclick="closePage()">❌ 關閉頁面</button>
   </div>
 
-  <!-- 播放 6 次後出現的按鈕 -->
   <div id="endControls">
     <button onclick="restartVideo()">🔁 重新播放 6 次</button>
     <button onclick="stopVideo()">⏹️ 停止播放</button>
   </div>
 
-  <script>
-    const video = document.getElementById("myVideo");
-    const endControls = document.getElementById("endControls");
+<script>
+  const video = document.getElementById("myVideo");
+  const endControls = document.getElementById("endControls");
+  let playCount = 0;
+  const MAX_PLAYS = 6;
 
-    let playCount = 0;  // 記錄已播放次數
-    const MAX_PLAYS = 6;
-
-    // 播放 / 暫停按鈕
-    function togglePlay() {
-      if (video.paused) {
-        video.muted = false;
-        video.volume = 1.0;
-        video.play();
-      } else {
-        video.pause();
-      }
+  function togglePlay() {
+    if (video.paused) {
+      video.muted = false;
+      video.volume = 1.0;
+      video.play();
+    } else {
+      video.pause();
     }
+  }
 
-    // 關閉網頁
-    function closePage() {
-      window.close();
-      history.back();
-    }
+  function closePage() {
+    window.close();
+    history.back();
+  }
 
-    // 影片播放到結尾時檢查次數
-    video.addEventListener("ended", () => {
-      playCount++;
+  video.addEventListener("ended", () => {
+    playCount++;
 
-      if (playCount < MAX_PLAYS) {
-        // 自動重播
-        video.currentTime = 0;
-        video.play();
-      } else {
-        // 播放第 6 次後停止
-        showEndControls();
-      }
-    });
-
-    // 顯示 🔁 & ⏹️ 按鈕
-    function showEndControls() {
-      endControls.style.display = "flex";
-    }
-
-    // 重新播放 6 次
-    function restartVideo() {
-      playCount = 0;
-      endControls.style.display = "none";
+    if (playCount < MAX_PLAYS) {
+      // ⭐ 不重載 video，僅用 currentTime 重設，避免原生控制列重生！
       video.currentTime = 0;
       video.play();
-    }
-
-    // 完全停止，不再播放
-    function stopVideo() {
+    } else {
       video.pause();
-      video.currentTime = 0;
+      endControls.style.display = "flex";
     }
-  </script>
+  });
+
+  function restartVideo() {
+    playCount = 0;
+    endControls.style.display = "none";
+    video.currentTime = 0;
+    video.play();
+  }
+
+  function stopVideo() {
+    video.pause();
+    video.currentTime = 0;
+  }
+</script>
 
 </body>
 </html>
