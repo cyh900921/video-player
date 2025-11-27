@@ -25,12 +25,16 @@
     background:#444; color:white;
     border:none; border-radius:10px;
   }
+  button:disabled {
+    background:#222;
+    color:#777;
+  }
 </style>
 </head>
 
 <body>
 
-<video id="v" playsinline
+<video id="v" playsinline muted
   style="position:absolute; left:-9999px; top:-9999px; width:1px; height:1px;"
 >
   <source src="完整影片.mp4" type="video/mp4">
@@ -39,7 +43,7 @@
 <canvas id="c"></canvas>
 
 <div class="controls">
-  <button id="startBtn" onclick="startOrRestart()">▶️ 開始播放</button>
+  <button id="startBtn" onclick="startPlayback()">▶️ 開始播放</button>
   <button onclick="stopVideo()">⏹️ 停止</button>
 </div>
 
@@ -59,7 +63,7 @@ video.addEventListener("loadedmetadata", () => {
   canvas.height = video.videoHeight;
 });
 
-// 畫面更新
+// Canvas 畫面更新
 function draw() {
   if (playing) {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -67,7 +71,7 @@ function draw() {
   }
 }
 
-// 循環邏輯
+// 6 次循環
 video.addEventListener("ended", () => {
   loopCount++;
   if (loopCount < MAX_LOOP) {
@@ -75,34 +79,31 @@ video.addEventListener("ended", () => {
     video.play();
   } else {
     playing = false;
-    updateButtonToReplay();
+    startBtn.textContent = "🔁 再播放一次（6 次）";
+    startBtn.disabled = false;
   }
 });
 
-// ⭐ 按鈕：開始 或 重新播放
-function startOrRestart() {
+// ⭐ 按一下 → 播放 6 次（不會變暫停）
+function startPlayback() {
   loopCount = 0;
   playing = true;
   video.currentTime = 0;
   video.play();
   draw();
 
-  startBtn.textContent = "⏸ 暫停";
+  // 播放時 disable 按鈕，不讓它變成暫停模式
+  startBtn.disabled = true;
 }
 
-// ⭐ 動態把按鈕改成「重播」
-function updateButtonToReplay() {
-  startBtn.textContent = "🔁 再播放一次（6 次）";
-}
-
-// 停止播放
+// ⭐ 停止播放（回到開始狀態）
 function stopVideo() {
   playing = false;
   video.pause();
   video.currentTime = 0;
 
-  // 按鈕回初始
   startBtn.textContent = "▶️ 開始播放";
+  startBtn.disabled = false;
 }
 </script>
 
