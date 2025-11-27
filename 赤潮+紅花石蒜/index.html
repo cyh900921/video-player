@@ -1,76 +1,110 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>赤潮+紅花石蒜 影片播放</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background-color: black;
-      overflow: hidden;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    video {
-      max-width: 100vw;
-      max-height: 90vh;
-      background: black;
-    }
-    .controls {
-      margin-top: 20px;
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    button {
-      padding: 20px 40px;
-      font-size: 24px;
-      border: none;
-      border-radius: 10px;
-      background-color: #444;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #666;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Canvas Video Player</title>
+<style>
+  body {
+    background:black; margin:0;
+    display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    height:100vh;
+  }
+  canvas {
+    background:black;
+    max-width:100vw;
+    max-height:80vh;
+  }
+  .controls {
+    margin-top:20px;
+    display:flex; gap:20px;
+  }
+  button {
+    padding:20px 40px;
+    font-size:24px;
+    background:#444; color:white;
+    border:none; border-radius:10px;
+  }
+  button:disabled {
+    background:#222;
+    color:#777;
+  }
+</style>
 </head>
+
 <body>
-  <!-- 1. 移除 muted、autoplay（建議手動播放），加上 controls -->
-  <video id="myVideo" controls playsinline>
-    <source src="赤潮+紅花石蒜.mp4" type="video/mp4">
-    您的瀏覽器不支援影片播放。
-  </video>
 
-  <div class="controls">
-    <button onclick="togglePlay()">▶️ / ⏸️ 播放 / 暫停</button>
-    <button onclick="closePage()">❌ 關閉頁面</button>
-  </div>
+<!-- ⭐ 不要 muted，聲音才會出來 -->
+<video id="v" playsinline
+  style="position:absolute; left:-9999px; top:-9999px; width:1px; height:1px;"
+>
+  <source src="赤潮+紅花石蒜.mp4" type="video/mp4">
+</video>
 
-  <script>
-    const video = document.getElementById("myVideo");
+<canvas id="c"></canvas>
 
-    function togglePlay() {
-      if (video.paused) {
-        // 確保解除靜音並把音量開到最大
-        video.muted = false;
-        video.volume = 1.0;
-        video.play();
-      } else {
-        video.pause();
-      }
-    }
+<div class="controls">
+  <button id="startBtn" onclick="startPlayback()">▶️ 開始播放</button>
+  <button onclick="stopVideo()">⏹️ 停止</button>
+</div>
 
-    function closePage() {
-      window.close();
-      history.back();
-    }
-  </script>
+<script>
+const video = document.getElementById("v");
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+let playing = false;
+let loopCount = 0;
+const MAX_LOOP = 6;
+
+const startBtn = document.getElementById("startBtn");
+
+video.addEventListener("loadedmetadata", () => {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+});
+
+function draw() {
+  if (playing) {
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    requestAnimationFrame(draw);
+  }
+}
+
+video.addEventListener("ended", () => {
+  loopCount++;
+  if (loopCount < MAX_LOOP) {
+    video.currentTime = 0;
+    video.play();
+  } else {
+    playing = false;
+    startBtn.textContent = "🔁 重複";
+    startBtn.disabled = false;
+  }
+});
+
+function startPlayback() {
+  loopCount = 0;
+  playing = true;
+  video.currentTime = 0;
+
+  // ⭐ 用戶互動觸發播放 → iOS 允許有聲音播放
+  video.play();
+
+  draw();
+
+  startBtn.disabled = true;
+}
+
+function stopVideo() {
+  playing = false;
+  video.pause();
+  video.currentTime = 0;
+
+  startBtn.textContent = "▶️ 開始播放";
+  startBtn.disabled = false;
+}
+</script>
+
 </body>
 </html>
