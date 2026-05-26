@@ -40,10 +40,13 @@
   <source src="赤潮+紅花石蒜.mp4" type="video/mp4">
 </video>
 
+<audio id="voice-over" src="audio.wav"></audio>
+
 <canvas id="c"></canvas>
 
 <div class="controls">
   <button id="startBtn" onclick="startPlayback()">▶️ 開始播放</button>
+  <button id="audioBtn" onclick="toggleAudio()">▶️ 語音導覽</button>
   <button onclick="exitPage()">❌ 離開</button>
 </div>
 
@@ -51,10 +54,12 @@
 const video = document.getElementById("v");
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
+const voiceOver = document.getElementById("voice-over");
+const audioBtn = document.getElementById("audioBtn");
 
 let playing = false;
 let loopCount = 0;
-const MAX_LOOP = 2;
+const MAX_LOOP = 3;
 
 const startBtn = document.getElementById("startBtn");
 
@@ -114,6 +119,27 @@ function startPlayback() {
 
   startBtn.disabled = true;
 }
+
+// ============================
+// ⭐ 語音導覽
+// ============================
+function toggleAudio() {
+  // 如果音檔正在播放，則暫停
+  if (!voiceOver.paused) {
+    voiceOver.pause();
+    audioBtn.textContent = "▶️ 語音導覽";
+  } else {
+    // 否則 (已暫停或已結束)，從頭播放
+    voiceOver.currentTime = 0;
+    voiceOver.play();
+    audioBtn.textContent = "⏸️ 暫停導覽";
+  }
+}
+
+voiceOver.addEventListener("ended", () => {
+  // 播放結束後，將按鈕文字恢復
+  audioBtn.textContent = "▶️ 語音導覽";
+});
 
 // ============================
 // ⭐ 離開按鈕
