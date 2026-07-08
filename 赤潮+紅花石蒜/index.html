@@ -121,9 +121,27 @@ function startPlayback() {
 }
 
 // ============================
-// ⭐ 語音導覽
+// ⭐ 語音導覽（用 Web Audio 放大音量）
 // ============================
+const VOICE_GAIN = 3.0; // 放大倍率（1.0 = 原始音量）
+let audioCtx = null;
+
+function boostVoice() {
+  // 第一次播放時，把 <audio> 接到 GainNode 放大音量
+  if (audioCtx) return;
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return; // 瀏覽器不支援就維持原始音量
+  audioCtx = new AudioCtx();
+  const source = audioCtx.createMediaElementSource(voiceOver);
+  const gainNode = audioCtx.createGain();
+  gainNode.gain.value = VOICE_GAIN;
+  source.connect(gainNode).connect(audioCtx.destination);
+}
+
 function toggleAudio() {
+  boostVoice();
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+
   // 如果音檔正在播放，則暫停
   if (!voiceOver.paused) {
     voiceOver.pause();
