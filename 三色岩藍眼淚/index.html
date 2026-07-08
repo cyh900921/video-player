@@ -92,26 +92,40 @@ function draw() {
   }
 }
 
-video.addEventListener("ended", () => {
-  loopCount++;
-  if (loopCount < MAX_LOOP) {
-    video.currentTime = 0;
-    video.play();
-  } else {
-    playing = false;
-    startBtn.textContent = "🔁 重複播放";
-    startBtn.disabled = false;
+// ⭐ 用「原生 loop」循環，而不是每次都重新 play()
+//    （iOS 上重新 play() 會搶走音訊焦點、中斷正在播放的語音導覽）
+let lastVideoTime = 0;
+video.addEventListener("timeupdate", () => {
+  // 播放時間往回跳，代表剛剛循環回到開頭 → 完成一次播放
+  if (playing && video.currentTime + 0.5 < lastVideoTime) {
+    loopCount++;
+    if (loopCount >= MAX_LOOP - 1) {
+      video.loop = false; // 最後一輪：讓它自然播完後停止
+    }
   }
+  lastVideoTime = video.currentTime;
+});
+
+video.addEventListener("ended", () => {
+  // 只有在最後一輪 (loop=false) 播完時才會觸發
+  playing = false;
+  startBtn.textContent = "🔁 重複播放";
+  startBtn.disabled = false;
 });
 
 // ============================
 // ⭐ 開始播放（按鈕觸發 → 有聲音）
 // ============================
 function startPlayback() {
+  setupAudio();
+  resumeAudio();
+
   loopCount = 0;
+  lastVideoTime = 0;
   playing = true;
 
   video.muted = false;
+  video.loop = (MAX_LOOP > 1); // 用原生 loop 循環，iOS 才不會中斷語音導覽
   video.currentTime = 0;
   video.play();
 
@@ -121,41 +135,98 @@ function startPlayback() {
 }
 
 // ============================
-// ⭐ 語音導覽（用 Web Audio 放大音量）
+// ⭐ 語音導覽（在瀏覽器的「音訊執行緒」上播放，與影片脫鉤）
+//    影片循環是 <video> 元素的事件；iOS 會用單一的音訊 session，
+//    只要影片重播就會把 session 搶回去、中斷其他 <audio>。
+//    解法：把 audio.m4a 解碼進記憶體，透過 Web Audio 的
+//    AudioBufferSourceNode 播放 —— 它跑在獨立的音訊執行緒、
+//    不是媒體元素，所以影片循環無法中斷它。
+//    （若以 file:// 開啟無法 fetch，會自動退回用 <audio> 播放。）
 // ============================
-const VOICE_GAIN = 3.0; // 放大倍率（1.0 = 原始音量）
+const VOICE_GAIN = 3.0; // 語音導覽放大倍率（1.0 = 原始音量）
 let audioCtx = null;
+let voiceGain = null;
+let voiceBufferPromise = null; // 下載＋解碼（只做一次）
+let voiceNode = null;          // 目前正在播放的節點
+let voicePlaying = false;
 
-function boostVoice() {
-  // 第一次播放時，把 <audio> 接到 GainNode 放大音量
+function setupAudio() {
   if (audioCtx) return;
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  if (!AudioCtx) return; // 瀏覽器不支援就維持原始音量
+  if (!AudioCtx) return; // 瀏覽器不支援
   audioCtx = new AudioCtx();
-  const source = audioCtx.createMediaElementSource(voiceOver);
-  const gainNode = audioCtx.createGain();
-  gainNode.gain.value = VOICE_GAIN;
-  source.connect(gainNode).connect(audioCtx.destination);
+  voiceGain = audioCtx.createGain();
+  voiceGain.gain.value = VOICE_GAIN;
+  voiceGain.connect(audioCtx.destination);
+  loadVoice(); // 先開始下載＋解碼，按鈕按下時就能立刻播放
 }
 
-function toggleAudio() {
-  boostVoice();
+function resumeAudio() {
   if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+}
 
-  // 如果音檔正在播放，則暫停
-  if (!voiceOver.paused) {
-    voiceOver.pause();
-    audioBtn.textContent = "▶️ 語音導覽";
+function loadVoice() {
+  if (!audioCtx) return Promise.resolve(null);
+  if (!voiceBufferPromise) {
+    voiceBufferPromise = fetch("audio.m4a")
+      .then((r) => r.arrayBuffer())
+      .then((arr) => new Promise((resolve, reject) => {
+        // 同時相容 Promise 版與舊 callback 版的 decodeAudioData
+        const p = audioCtx.decodeAudioData(arr, resolve, reject);
+        if (p && p.then) p.then(resolve, reject);
+      }))
+      .catch(() => null); // 失敗（例如 file://）→ 之後改用 <audio> 退回
+  }
+  return voiceBufferPromise;
+}
+
+function stopVoice() {
+  voicePlaying = false;
+  if (voiceNode) {
+    try { voiceNode.onended = null; voiceNode.stop(); } catch (e) {}
+    voiceNode = null;
+  }
+  if (!voiceOver.paused) voiceOver.pause(); // 退回模式用的
+  audioBtn.textContent = "▶️ 語音導覽";
+}
+
+async function toggleAudio() {
+  setupAudio();
+  resumeAudio();
+
+  if (voicePlaying) { // 播放中 → 停止
+    stopVoice();
+    return;
+  }
+
+  // 開始播放（先樂觀上鎖，避免載入期間被重複觸發）
+  voicePlaying = true;
+  audioBtn.textContent = "⏸️ 暫停導覽";
+
+  const buf = audioCtx ? await loadVoice() : null;
+  if (!voicePlaying) return; // 載入期間又被按了停止
+
+  if (buf) {
+    // 主要路徑：Web Audio 緩衝播放（iOS 影片循環不會中斷）
+    voiceNode = audioCtx.createBufferSource();
+    voiceNode.buffer = buf;
+    voiceNode.connect(voiceGain);
+    voiceNode.onended = () => {
+      voiceNode = null;
+      voicePlaying = false;
+      audioBtn.textContent = "▶️ 語音導覽";
+    };
+    voiceNode.start();
   } else {
-    // 否則 (已暫停或已結束)，從頭播放
+    // 退回路徑：直接用 <audio> 元素（例如以 file:// 開啟）
     voiceOver.currentTime = 0;
     voiceOver.play();
-    audioBtn.textContent = "⏸️ 暫停導覽";
   }
 }
 
 voiceOver.addEventListener("ended", () => {
-  // 播放結束後，將按鈕文字恢復
+  // 退回模式：播放結束後恢復按鈕文字
+  voicePlaying = false;
   audioBtn.textContent = "▶️ 語音導覽";
 });
 
